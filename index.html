@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ISS Live Tracker 🛸</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="logo">🛸 ISS Tracker</div>
+    <div class="live-badge">
+      <div class="live-dot">
+        LIVE
+      </div>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Latitude</div>
+        <div class="stat-value" id="lat">--</div>
+        <div class="stat-unit">degrees</div>
+      </div>
+      <div class="stat-card">
+      <div class="stat-label">Longitude</div>
+      <div class="stat-value" id="lon">--</div>
+      <div class="stat-unit">degrees</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Altitude</div>
+      <div class="stat-value">~408</div>
+      <div class="stat-unit">km above Earth</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Speed</div>
+      <div class="stat-value">27,600</div>
+      <div class="stat-unit">km/h orbital</div>
+    </div>
+    </div>
+    
+     <div class="map-container">
+    <div id="map"></div>
+  </div>
+
+  <div class="section-title">Current Crew Aboard ISS</div>
+  <div id="crew-container">
+    <div class="loading">Fetching crew data...</div>
+  </div>
+
+  </div>
+  <footer>
+  Built for <a href="https://stardance.hackclub.com" target="_blank">Hack Club Stardance</a> · 
+  Data via <a href="http://open-notify.org" target="_blank">Open Notify API</a> · 
+  Made by Nikhil
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const map = L.map('map', { zoomControl: true, attributionControl: false }).setView([0, 0], 2);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 10
+  }).addTo(map);
+
+  // Custom ISS icon
+  const issIcon = L.divIcon({
+    html: '<div style="font-size:2rem;filter:drop-shadow(0 0 8px #7dd3fc);">🛸</div>',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    className: ''
+  });
+  let issMarker = null;
+  let path = [];
+  let pathLine = null;
+
+  async function updateISS() {
+    try {
+      const res = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
+      const data = await res.json();
+
+      const lat = parseFloat(data.latitude).toFixed(3);
+      const lon = parseFloat(data.longitude).toFixed(3);
+
+      document.getElementById('lat').textContent = lat;
+      document.getElementById('lon').textContent = lon;
+
+      const pos = [parseFloat(lat), parseFloat(lon)];
+      if (!issMarker) {
+        issMarker = L.marker(pos, { icon: issIcon }).addTo(map);
+      } else {
+        issMarker.setLatLng(pos);
+      }
+
+      // Draw path trail
+      path.push(pos);
+      if (path.length > 60) path.shift();
+
+      if (pathLine) map.removeLayer(pathLine);
+      pathLine = L.polyline(path, {
+        color: '#7dd3fc',
+        weight: 1.5,
+        opacity: 0.4,
+        dashArray: '4 6'
+      }).addTo(map);
+
+    } catch (e) {
+      console.error('ISS fetch error:', e);
+      }
+  }
+
+  async function loadCrew() {
+    try {
+      const res = await fetch('https://corsproxy.io/?https://api.open-notify.org/astros.json');
+      const data = await res.json();
+      const issCrew = data.people.filter(p => p.craft === 'ISS');
+
+      const container = document.getElementById('crew-container');
+      if (issCrew.length === 0) {
+        container.innerHTML = '<div class="loading">No crew data available</div>';
+        return;
+      }
+
+      container.innerHTML = '<div class="crew-grid">' +
+        issCrew.map(p => `<div class="crew-chip">${p.name}</div>`).join('') +
+        '</div>';
+    } catch (e) {
+      document.getElementById('crew-container').innerHTML =
+        '<div class="error-msg">Could not load crew data.</div>';
+    }
+    }
+
+  updateISS();
+  loadCrew();
+  setInterval(updateISS, 5000); 
+</script>
+</body>
+</html>
