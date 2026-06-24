@@ -16,7 +16,7 @@ coordinates, and who's currently aboard.
 
 ## How I built it
 
-Pretty simple stack — just HTML, CSS and vanilla JS. 
+Pretty simple stack — just HTML, CSS and JS. 
 Used the wheretheiss.at API for live position data and 
 Open Notify API for crew info. Leaflet.js for the map.
 
