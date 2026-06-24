@@ -113,26 +113,23 @@
   }
 
   async function loadCrew() {
-    try {
-      const res = await fetch('https://corsproxy.io/?https://api.open-notify.org/astros.json');
-      const data = await res.json();
-      const issCrew = data.people.filter(p => p.craft === 'ISS');
+  try {
+    const res = await fetch('https://ll.thespacedevs.com/2.2.0/astronaut/?in_space=true&limit=20');
+    const data = await res.json();
+    const issCrew = data.results.filter(a => 
+      a.flights_count > 0
+    ).slice(0, 7);
 
-      const container = document.getElementById('crew-container');
-      if (issCrew.length === 0) {
-        container.innerHTML = '<div class="loading">No crew data available</div>';
-        return;
-      }
-
-      container.innerHTML = '<div class="crew-grid">' +
-        issCrew.map(p => `<div class="crew-chip">${p.name}</div>`).join('') +
-        '</div>';
-    } catch (e) {
-      document.getElementById('crew-container').innerHTML =
-        '<div class="error-msg">Could not load crew data.</div>';
-    }
-    }
-
+    const container = document.getElementById('crew-container');
+    container.innerHTML = '<div class="crew-grid">' +
+      issCrew.map(p => `<div class="crew-chip">${p.name}</div>`).join('') +
+      '</div>';
+  } catch (e) {
+    console.error(e);
+    document.getElementById('crew-container').innerHTML =
+      '<div class="error-msg">Could not load crew data.</div>';
+  }
+}
   updateISS();
   loadCrew();
   setInterval(updateISS, 5000); 
