@@ -1,140 +1,294 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ISS Live Tracker 🛸</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISS Live Tracker 🛰️</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <div class="logo">🛸 ISS Tracker</div>
-    <div class="live-badge">
-      <div class="live-dot">
-        LIVE
-      </div>
-    </div>
-  </header>
 
-  <div class="main">
-    <div class="stats">
-      <div class="stat-card">
-        <div class="stat-label">Latitude</div>
-        <div class="stat-value" id="lat">--</div>
-        <div class="stat-unit">degrees</div>
-      </div>
-      <div class="stat-card">
-      <div class="stat-label">Longitude</div>
-      <div class="stat-value" id="lon">--</div>
-      <div class="stat-unit">degrees</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Altitude</div>
-      <div class="stat-value">~408</div>
-      <div class="stat-unit">km above Earth</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Speed</div>
-      <div class="stat-value">27,600</div>
-      <div class="stat-unit">km/h orbital</div>
-    </div>
-    </div>
-    
-     <div class="map-container">
-    <div id="map"></div>
+<header>
+  <div class="logo">🛰️ ISS Tracker</div>
+  <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+</header>
+
+<main class="main">
+
+<div class="stats">
+  <div class="stat-card">
+    <div class="stat-label">Latitude</div>
+    <div class="stat-value" id="lat">--</div>
+    <div class="stat-unit">degrees</div>
   </div>
 
-  <div class="section-title">Current Crew Aboard ISS</div>
-  <div id="crew-container">
-    <div class="loading">Fetching crew data...</div>
+  <div class="stat-card">
+    <div class="stat-label">Longitude</div>
+    <div class="stat-value" id="lon">--</div>
+    <div class="stat-unit">degrees</div>
   </div>
 
+  <div class="stat-card">
+    <div class="stat-label">Altitude</div>
+    <div class="stat-value" id="alt">--</div>
+    <div class="stat-unit">km</div>
   </div>
-  <footer>
-  Built for <a href="https://stardance.hackclub.com" target="_blank">Hack Club Stardance</a> · 
-  Data via <a href="http://open-notify.org" target="_blank">Open Notify API</a> · 
-  Made by Nikhil
+
+  <div class="stat-card">
+    <div class="stat-label">Velocity</div>
+    <div class="stat-value" id="speed">--</div>
+    <div class="stat-unit">km/s</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Distance Travelled</div>
+    <div class="stat-value" id="distance">0</div>
+    <div class="stat-unit">km (this session)</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Tracking</div>
+    <div class="stat-value" id="tracking-status">LIVE</div>
+    <div class="stat-unit">real time</div>
+  </div>
+</div>
+
+<div class="status-bar">
+  Last Updated :
+  <span id="last-updated">--</span>
+</div>
+
+<div class="refresh-card">
+  <div class="refresh-text">
+    <span>Next Update</span>
+    <span><span id="countdown">5</span>s</span>
+  </div>
+
+  <div class="progress">
+    <div id="progress-bar"></div>
+  </div>
+
+  <div class="action-buttons">
+    <button id="toggleTracking">Pause Tracking</button>
+    <button id="centerMap">Center ISS</button>
+  </div>
+</div>
+
+<div class="map-container">
+  <div id="map"></div>
+</div>
+
+<h2 class="section-title">Current Crew Aboard ISS</h2>
+
+<div id="crew-container">
+  <div class="loading">Fetching astronauts...</div>
+</div>
+
+</main>
+
+<footer>
+Built by Nikhil for Hack Club Stardance.<br>
+Powered by Open Notify, WhereTheISS.at and SpaceDevs API.
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-  const map = L.map('map', { zoomControl: true, attributionControl: false }).setView([0, 0], 2);
+  const map = L.map("map", {
+  zoomControl: true,
+  attributionControl: false
+}).setView([0, 0], 3);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 10
-  }).addTo(map);
-
-  // Custom ISS icon
-  const issIcon = L.divIcon({
-    html: '<div style="font-size:2rem;filter:drop-shadow(0 0 8px #7dd3fc);">🛸</div>',
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    className: ''
-  });
-  let issMarker = null;
-  let path = [];
-  let pathLine = null;
-
-  async function updateISS() {
-    try {
-      const res = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
-      const data = await res.json();
-
-      const lat = parseFloat(data.latitude).toFixed(3);
-      const lon = parseFloat(data.longitude).toFixed(3);
-
-      document.getElementById('lat').textContent = lat;
-      document.getElementById('lon').textContent = lon;
-
-      const pos = [parseFloat(lat), parseFloat(lon)];
-      if (!issMarker) {
-        issMarker = L.marker(pos, { icon: issIcon }).addTo(map);
-      } else {
-        issMarker.setLatLng(pos);
-      }
-
-      // Draw path trail
-      path.push(pos);
-      if (path.length > 60) path.shift();
-
-      if (pathLine) map.removeLayer(pathLine);
-      pathLine = L.polyline(path, {
-        color: '#7dd3fc',
-        weight: 1.5,
-        opacity: 0.4,
-        dashArray: '4 6'
-      }).addTo(map);
-
-    } catch (e) {
-      console.error('ISS fetch error:', e);
-      }
+L.tileLayer(
+  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+  {
+    maxZoom: 18
   }
+).addTo(map);
 
-  async function loadCrew() {
+const issIcon = L.divIcon({
+  html: `
+    <div style="
+      font-size:2.4rem;
+      filter:drop-shadow(0 0 12px cyan);
+    ">
+      🛰️
+    </div>
+  `,
+  iconSize: [50, 50],
+  iconAnchor: [25, 25],
+  className: ""
+});
+
+let issMarker = null;
+let path = [];
+let pathLine = null;
+let tracking = true;
+let updateInterval = null;
+let totalDistance = 0;
+let lastVelocity = 0;
+let countdown = 5;
+
+async function updateISS() {
   try {
-    const res = await fetch('https://ll.thespacedevs.com/2.2.0/astronaut/?in_space=true&limit=20');
-    const data = await res.json();
-    const issCrew = data.results.filter(a => 
-      a.flights_count > 0
-    ).slice(0, 7);
+    const response = await fetch(
+      "https://api.wheretheiss.at/v1/satellites/25544"
+    );
 
-    const container = document.getElementById('crew-container');
-    container.innerHTML = '<div class="crew-grid">' +
-      issCrew.map(p => `<div class="crew-chip">${p.name}</div>`).join('') +
-      '</div>';
-  } catch (e) {
-    console.error(e);
-    document.getElementById('crew-container').innerHTML =
-      '<div class="error-msg">Could not load crew data.</div>';
+    const data = await response.json();
+
+    const latitude = Number(data.latitude);
+    const longitude = Number(data.longitude);
+    const altitude = Number(data.altitude);
+    const velocity = Number(data.velocity);
+
+    lastVelocity = velocity;
+
+    document.getElementById("lat").textContent = latitude.toFixed(3);
+    document.getElementById("lon").textContent = longitude.toFixed(3);
+    document.getElementById("alt").textContent = altitude.toFixed(0);
+    document.getElementById("speed").textContent = (velocity / 1000).toFixed(2);
+
+    totalDistance += velocity / 720;
+
+    document.getElementById("distance").textContent =
+      Math.round(totalDistance);
+
+    const position = [latitude, longitude];
+
+    if (!issMarker) {
+      issMarker = L.marker(position, {
+        icon: issIcon
+      }).addTo(map);
+    } else {
+      issMarker.setLatLng(position);
+    }
+
+    if (tracking) {
+      map.flyTo(position, map.getZoom(), {
+        duration: 1.8
+      });
+    }
+
+    path.push(position);
+
+    if (path.length > 100) {
+      path.shift();
+    }
+
+    if (pathLine) {
+      map.removeLayer(pathLine);
+    }
+
+    pathLine = L.polyline(path, {
+      color: "#38bdf8",
+      weight: 3,
+      opacity: 0.55,
+      smoothFactor: 1
+    }).addTo(map);
+
+    document.getElementById("last-updated").textContent =
+      new Date().toLocaleTimeString();
+  } catch (error) {
+    console.error(error);
   }
 }
-  updateISS();
-  loadCrew();
-  setInterval(updateISS, 5000); 
+async function loadCrew() {
+  try {
+    const res = await fetch(
+      "https://ll.thespacedevs.com/2.2.0/astronaut/?in_space=true&limit=20"
+    );
+
+    const data = await res.json();
+
+    const crew = data.results
+      .filter(person => person.flights_count > 0)
+      .slice(0, 7);
+
+    document.getElementById("crew-container").innerHTML = `
+      <div class="crew-grid">
+        ${crew
+          .map(
+            person => `
+              <div class="crew-chip">
+                👨‍🚀 ${person.name}
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+    `;
+  } catch (error) {
+    document.getElementById("crew-container").innerHTML =
+      `<div class="error-msg">
+        Could not load crew data.
+      </div>`;
+  }
+}
+
+setInterval(() => {
+  countdown--;
+
+  if (countdown < 0) {
+    countdown = 5;
+  }
+
+  document.getElementById("countdown").textContent = countdown;
+
+  document.getElementById("progress-bar").style.width =
+    (countdown / 5) * 100 + "%";
+}, 1000);
+document.getElementById("toggleTracking").addEventListener("click", () => {
+  const button = document.getElementById("toggleTracking");
+  const status = document.getElementById("tracking-status");
+
+  if (tracking) {
+    tracking = false;
+
+    clearInterval(updateInterval);
+
+    button.textContent = "Resume Tracking";
+    status.textContent = "PAUSED";
+  } else {
+    tracking = true;
+
+    updateISS();
+
+    updateInterval = setInterval(() => {
+      updateISS();
+      countdown = 5;
+    }, 5000);
+
+    button.textContent = "Pause Tracking";
+    status.textContent = "LIVE";
+  }
+});
+
+document.getElementById("centerMap").addEventListener("click", () => {
+  if (!issMarker) return;
+
+  map.flyTo(
+    issMarker.getLatLng(),
+    4,
+    {
+      duration: 1.5
+    }
+  );
+});
+loadCrew();
+
+updateISS();
+
+countdown = 5;
+
+updateInterval = setInterval(() => {
+  if (tracking) {
+    updateISS();
+    countdown = 5;
+  }
+}, 5000);
 </script>
 
-<!-- redeploy -->
 </body>
 </html>
