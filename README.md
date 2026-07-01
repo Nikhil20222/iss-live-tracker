@@ -36,11 +36,11 @@ One thing which took me some time was making ISS move smoothly on map and showin
 
 ### Main Dashboard
 
-<img width="1660" height="907" alt="image" src="![alt text](image.png)" />
+<img width="1660" height="907" alt="image" src="(image.png)" />
 
 ### Crew Section
 
-<img width="1917" height="877" alt="image" src="![alt text](image-1.png)" />
+<img width="1917" height="877" alt="image" src="(image-1.png)" />
 
 ## Things I want to add later
 
