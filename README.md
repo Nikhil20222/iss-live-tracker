@@ -8,17 +8,17 @@ Now it can show live ISS location, altitude, speed, astronauts currently in spac
 
 ## Features
 
-* 🌍 Live ISS location
-* 🛰️ Moving ISS on map
-* ✨ ISS trail path
-* 📍 Latitude and Longitude
-* 🚀 Altitude and Speed
-* 👨‍🚀 Current crew on ISS
-* ⏱️ Auto refresh every 5 seconds
-* 📊 Refresh countdown bar
-* 📏 Distance travelled while page is open
-* ⏸️ Pause and Resume tracking
-* 🎯 Center map on ISS
+- 🌍 Live ISS location
+- 🛰️ Moving ISS on map
+- ✨ ISS trail path
+- 📍 Latitude and Longitude
+- 🚀 Altitude and Speed
+- 👨‍🚀 Current crew on ISS
+- ⏱️ Auto refresh every 5 seconds
+- 📊 Refresh countdown bar
+- 📏 Distance travelled while page is open
+- ⏸️ Pause and Resume tracking
+- 🎯 Center map on ISS
 
 ## How I made it
 
@@ -36,20 +36,18 @@ One thing which took me some time was making ISS move smoothly on map and showin
 
 ### Main Dashboard
 
-<img width="1660" height="907" alt="image" src="https://github.com/user-attachments/assets/024a9265-c490-4f2e-b06e-9b8a1d8faf86" />
-
+<img width="1660" height="907" alt="image" src="![alt text](image.png)" />
 
 ### Crew Section
 
-<img width="1917" height="877" alt="image" src="https://github.com/user-attachments/assets/645bfeca-0d6b-4839-8772-a7fd744dc5f9" />
-
+<img width="1917" height="877" alt="image" src="![alt text](image-1.png)" />
 
 ## Things I want to add later
 
-* Show country below ISS
-* Light mode
-* More ISS information
-* Better animations
+- Show country below ISS
+- Light mode
+- More ISS information
+- Better animations
 
 Thanks for checking my project ❤️
 
