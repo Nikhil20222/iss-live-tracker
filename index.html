@@ -219,37 +219,29 @@
     }
   }
 
-  async function loadCrew() {
+    async function loadCrew() {
+    const staticCrew = [
+      "Oleg Kononenko", "Nikolai Chub", "Tracy C. Dyson", 
+      "Matthew Dominick", "Michael Barratt", "Jeanette Epps", "Alexander Grebenkin"
+    ];
+
     try {
-      const res = await fetch(
-        "https://ll.thespacedevs.com/2.2.0/astronaut/?in_space=true&limit=20"
-      );
-
+      const res = await fetch("https://ll.thespacedevs.com/2.2.0/astronaut/?in_space=true&limit=20");
       const data = await res.json();
-
-      const crew = data.results
-        .filter(person => person.flights_count > 0)
-        .slice(0, 7);
-
-      document.getElementById("crew-container").innerHTML = `
-        <div class="crew-grid">
-          ${crew
-            .map(
-              person => `
-                <div class="crew-chip">
-                  ${person.name}
-                </div>
-              `
-            )
-            .join("")}
-        </div>
-      `;
+      // If API works, use it
+      const crew = data.results.filter(p => p.flights_count > 0).slice(0, 7).map(p => p.name);
+      renderCrew(crew);
     } catch (error) {
-      document.getElementById("crew-container").innerHTML =
-        `<div class="error-msg">
-          Could not load crew data.
-        </div>`;
+      renderCrew(staticCrew);
     }
+  }
+
+  function renderCrew(names) {
+    document.getElementById("crew-container").innerHTML = `
+      <div class="crew-grid">
+        ${names.map(name => `<div class="crew-chip">${name}</div>`).join("")}
+      </div>
+    `;
   }
 
   setInterval(() => {
